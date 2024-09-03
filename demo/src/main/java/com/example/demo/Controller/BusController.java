@@ -56,4 +56,16 @@ public class BusController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("{\"message\": \"Bus not found\"}");
         }
     }
+
+    @GetMapping("/getBusDetails/{busId}")
+    public ResponseEntity<BusDTO> getBusDetails(@PathVariable Integer busId) {
+        Bus bus = busService.findById(busId);
+        if (bus == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        BusDTO busDTO = new BusDTO();
+        busDTO.setLicencePlate(bus.getLicencePlate());
+        busDTO.setRoutes(bus.getRoutes());
+        return new ResponseEntity<>(busDTO, HttpStatus.OK);
+    }
 }

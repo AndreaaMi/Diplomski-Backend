@@ -47,6 +47,9 @@ public class HRAdministratorController {
 
     @Autowired
     private MessageService messageService;
+
+    @Autowired
+    private LocationService locationService;
     @PostMapping (path = "/addUser")
     public ResponseEntity<User> addUser(@RequestBody UserDTO userDTO) {
         User existingUser = this.userService.findByEmail(userDTO.getEmail());
@@ -473,6 +476,14 @@ public class HRAdministratorController {
         } else {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
+    }
+    @GetMapping("/locations")
+    public ResponseEntity<List<Location>> getAllLocations() {
+        List<Location> locations = locationService.getAll();
+        if (locations.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(locations, HttpStatus.OK);
     }
 
 

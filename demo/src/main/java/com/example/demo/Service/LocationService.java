@@ -7,6 +7,9 @@ import com.example.demo.Repository.LocationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class LocationService {
@@ -18,14 +21,13 @@ public class LocationService {
     public Location save(Location location){
         Location savedLocation = locationRepository.save(location);
         Station station = new Station(savedLocation);
-        //sendLocationToGraphDatabase(savedLocation, station);
         return savedLocation;
     }
 
-
-
-    public Location getByLatitudeAndLongiture(double latitude, double longitude){
+    public Location getByLatitudeAndLongitude(double latitude, double longitude){
         return locationRepository.getByLatitudeAndLongitude(latitude, longitude);
     }
-
+    public List<Location> getAll(){
+        return locationRepository.findAll();
+    }
 }

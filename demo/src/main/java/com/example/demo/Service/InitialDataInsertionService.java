@@ -62,7 +62,7 @@ public class InitialDataInsertionService {
         User user3 = new User(
                 "AndreaHR",
                 "Andrea",
-                "Mitic",
+                "Mitić",
                 "amitic@gmail.com",
                 "am123",
                 user3BirthDate,
@@ -76,9 +76,9 @@ public class InitialDataInsertionService {
 
         LocalDate user4BirthDate = LocalDate.ofEpochDay(2002-18-1);
         User user4 = new User(
-                "Nemkac",
-                "Nemanja",
-                "Todorovic",
+                "RAAna",
+                "Ana",
+                "Todorović",
                 "nemanjatodorovic132002002@gmail.com",
                 "nt123",
                 user4BirthDate,
@@ -103,7 +103,6 @@ public class InitialDataInsertionService {
         );
         user6.setProfilePicture("profile_20230915_102115.png");
         userService.save(user6);
-
         User savedUser6 = userService.addUser(user6);
         if(savedUser6 != null) {
             Salary salaryForUser6 = new Salary();
@@ -148,6 +147,82 @@ public class InitialDataInsertionService {
             dto.setLastname(savedUser7.getLastname());
             dto.setUsername(savedUser7.getUsername());
         }
+
+
+        LocalDate emp1BirthDate = LocalDate.of(1990, 5, 12);
+        User emp1 = new User(
+                "RAAleksandar",
+                "Aleksandar",
+                "Jovanović",
+                "ajovanovic@gmail.com",
+                "aj123",
+                emp1BirthDate,
+                "0651234567",
+                "ROLE_ROUTEADMINISTRATOR",
+                true
+        );
+        emp1.setProfilePicture("profile_20230915_102101.png");
+        userService.save(emp1);
+
+        LocalDate emp2BirthDate = LocalDate.of(1988, 11, 22);
+        User emp2 = new User(
+                "HRMarija",
+                "Marija",
+                "Petrović",
+                "mpetrovic@gmail.com",
+                "mp123",
+                emp2BirthDate,
+                "0622345678",
+                "ROLE_HRAdministrator",
+                true
+        );
+        emp2.setProfilePicture("profile_20230915_102102.png");
+        userService.save(emp2);
+
+        LocalDate emp3BirthDate = LocalDate.of(1995, 3, 18);
+        User emp3 = new User(
+                "DriverNikola",
+                "Nikola",
+                "Marković",
+                "nmarkovic@gmail.com",
+                "nm123",
+                emp3BirthDate,
+                "0643456789",
+                "ROLE_DRIVER",
+                true
+        );
+        emp3.setProfilePicture("profile_20230915_102103.png");
+        userService.save(emp3);
+
+        LocalDate emp4BirthDate = LocalDate.of(1992, 7, 30);
+        User emp4 = new User(
+                "ServicerJelena",
+                "Jelena",
+                "Ivanović",
+                "jivanovic@gmail.com",
+                "ji123",
+                emp4BirthDate,
+                "0634567890",
+                "ROLE_SERVICER",
+                true
+        );
+        emp4.setProfilePicture("profile_20230915_102104.png");
+        userService.save(emp4);
+
+        LocalDate emp5BirthDate = LocalDate.of(1985, 2, 14);
+        User emp5 = new User(
+                "AccMilos",
+                "Milos",
+                "Stojanović",
+                "mstojanovic@gmail.com",
+                "ms123",
+                emp5BirthDate,
+                "0615678901",
+                "ROLE_ACCOUNTANT",
+                true
+        );
+        emp5.setProfilePicture("profile_20230915_102105.png");
+        userService.save(emp5);
 
         Card card1 = new Card(
                 "1234 5678",
@@ -206,11 +281,11 @@ public class InitialDataInsertionService {
             dto.setUsername(savedUser5.getUsername());
         }
 
-        Location location1 = new Location(45.242006, 19.842685);
-        Location location2 = new Location(45.241652, 19.842843);
-        Location location3 = new Location(45.243805, 19.841589);
-        Location location4 = new Location(45.246582, 19.840096);
-        Location location5 = new Location(45.247929, 19.839362);
+        Location location1 = new Location("Kraljevica Marka 53", 45.242006, 19.842685);
+        Location location2 = new Location("Veljka Petrovica 5", 45.241652, 19.842843);
+        Location location3 = new Location("Veselina Maslese 156", 45.243805, 19.841589);
+        Location location4 = new Location("Papa Pavla 4",45.246582, 19.840096);
+        Location location5 = new Location("Bulevar oslobodjenja 4", 45.247929, 19.839362);
 
         locationService.save(location1);
         locationService.save(location2);
@@ -232,6 +307,28 @@ public class InitialDataInsertionService {
         Bus bus1 = new Bus("SM 076 AT");
         busService.save(bus1);
         bus1.setRoutes(routesForBus1);
+
+        Bus bus2 = new Bus("NS 123 AB");
+        Bus bus3 = new Bus("BG 321 CD");
+        Bus bus4 = new Bus("SM 456 EF");
+        Bus bus5 = new Bus("ZR 654 GH");
+        Bus bus6 = new Bus("SU 789 IJ");
+        Bus bus7 = new Bus("KA 987 KL");
+        Bus bus8 = new Bus("PA 147 MN");
+        Bus bus9 = new Bus("VU 258 OP");
+        Bus bus10 = new Bus("SA 369 QR");
+        Bus bus11 = new Bus("NI 741 ST");
+
+        busService.save(bus2);
+        busService.save(bus3);
+        busService.save(bus4);
+        busService.save(bus5);
+        busService.save(bus6);
+        busService.save(bus7);
+        busService.save(bus8);
+        busService.save(bus9);
+        busService.save(bus10);
+        busService.save(bus11);
 
         LocalDateTime now = LocalDateTime.now();
 

@@ -17,9 +17,11 @@ import org.springframework.web.bind.annotation.*;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/CityFlow/shift")
@@ -139,7 +141,32 @@ public class ShiftController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
+    @GetMapping("/date/{date}")
+    public ResponseEntity<List<ShiftDTO>> getShiftsByDate(@PathVariable("date") String dateString) {
+        LocalDate date;
+        try {
+            date = LocalDate.parse(dateString);
+        } catch (DateTimeParseException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
 
+        List<Shift> shifts = shiftService.findByDate(date);
+        if (shifts.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+
+        List<ShiftDTO> dtos = shifts.stream()
+                .map(shift -> new ShiftDTO(shift.getId(),
+                        shift.getUser().getId(),
+                        shift.getBus() != null ? shift.getBus().getId() : null,
+                        shift.getStartTime(),
+                        shift.getEndTime(),
+                        shift.getLocation(),
+                        shift.getExtraHours()))
+                .collect(Collectors.toList());
+
+        return new ResponseEntity<>(dtos, HttpStatus.OK);
+    }
 
 
 }

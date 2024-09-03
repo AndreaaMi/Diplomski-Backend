@@ -53,13 +53,13 @@ public class RouteController {
     public ResponseEntity<Route> save(@RequestBody RouteDTO routeDTO){
 
         Location starting = routeDTO.getStartingPoint();
-        Location existingStarting = locationService.getByLatitudeAndLongiture(starting.latitude, starting.longitude);
+        Location existingStarting = locationService.getByLatitudeAndLongitude(starting.latitude, starting.longitude);
         if(existingStarting == null){
             locationService.save(starting);
         }
 
         Location ending = routeDTO.getEndingPoint();
-        Location existingEnding = locationService.getByLatitudeAndLongiture(ending.latitude, ending.longitude);
+        Location existingEnding = locationService.getByLatitudeAndLongitude(ending.latitude, ending.longitude);
         if(existingEnding == null){
             locationService.save(ending);
         }
@@ -68,7 +68,7 @@ public class RouteController {
         List<Location> stations = new ArrayList<>();
 
         for(Location station : tmpStations){
-            Location savedStation = locationService.getByLatitudeAndLongiture(station.getLatitude(), station.getLongitude());
+            Location savedStation = locationService.getByLatitudeAndLongitude(station.getLatitude(), station.getLongitude());
             if (savedStation == null) {
                 locationService.save(station);
             } else {
