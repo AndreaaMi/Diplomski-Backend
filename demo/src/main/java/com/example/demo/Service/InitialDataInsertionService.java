@@ -332,9 +332,12 @@ public class InitialDataInsertionService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        Message message1 = new Message(1, 2, "Hi, how are you?", now.minusDays(1), false);
-        Message message2 = new Message(2, 1, "I'm good, thanks! And you?", now.minusDays(1).plusMinutes(5), true);
-
+        Message message1 = new Message(2, 1, "Hi Andrea, I would like to request information regarding my upcoming performance review. Could you kindly provide the date and any necessary documents?", now.minusDays(1), false);
+        Message message2 = new Message(1, 2, "Dear Ana, your performance review is scheduled for 26-09-2024. Please find the relevant documents attached for your reference. Let us know if you have any further questions.", now.minusDays(1).plusMinutes(5), true);
+        Message message5 = new Message(2, 1, "Could you also confirm whether there are any changes to the company's policy on paid leave this year", now.minusDays(1).plusMinutes(10), false);
+        Message message6 = new Message(1, 2, "We appreciate your inquiry. There have been no changes to the paid leave policy.", now.minusDays(1).plusMinutes(15), true);
+        Message message7 = new Message(2, 1, "Thank you for the information", now.minusDays(1).plusMinutes(9), false);
+        Message message8 = new Message(1, 2, "Should there be any updates, all employees will be notified promptly.", now.minusDays(1).plusMinutes(16), true);
         Message message3 = new Message(2, 3, "Are we meeting tomorrow?", now.minusHours(10), false);
         Message message4 = new Message(3, 2, "Yes, at the usual place.", now.minusHours(9), true);
 
@@ -342,5 +345,9 @@ public class InitialDataInsertionService {
         messageService.save(message2);
         messageService.save(message3);
         messageService.save(message4);
+        messageService.save(message5);
+        messageService.save(message6);
+        messageService.save(message7);
+
     }
 }
