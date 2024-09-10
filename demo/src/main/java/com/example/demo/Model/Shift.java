@@ -17,7 +17,7 @@ public class Shift {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "bus_id") // New reference to a Bus
+    @JoinColumn(name = "bus_id")
     private Bus bus;
 
     @Column(name = "start_time")

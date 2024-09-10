@@ -2,6 +2,9 @@ package com.example.demo.Model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+
 @Entity
 @Table(name = "salary")
 public class Salary {
@@ -13,6 +16,8 @@ public class Salary {
     @OneToOne
     private User user;
 
+    @Column(name = "salary_month")
+    private LocalDate salaryMonth;
     @Column(name = "base_salary")
     private double baseSalary;
 
@@ -49,6 +54,22 @@ public class Salary {
         this.holidayWorkHours = 0.0;
         this.nightShiftHours = 0.0;
         this.sickLeaveHours = 0.0;
+    }
+
+    public Salary(int id, User user, LocalDate salaryMonth, double baseSalary, double overtimeHours, double holidayWorkHours, double nightShiftHours, double sickLeaveHours, double overtimePayRate, double holidayPayRate, double nightShiftPayRate, String sickLeaveType, double totalSalary) {
+        this.id = id;
+        this.user = user;
+        this.salaryMonth = salaryMonth;
+        this.baseSalary = baseSalary;
+        this.overtimeHours = overtimeHours;
+        this.holidayWorkHours = holidayWorkHours;
+        this.nightShiftHours = nightShiftHours;
+        this.sickLeaveHours = sickLeaveHours;
+        this.overtimePayRate = overtimePayRate;
+        this.holidayPayRate = holidayPayRate;
+        this.nightShiftPayRate = nightShiftPayRate;
+        this.sickLeaveType = sickLeaveType;
+        this.totalSalary = totalSalary;
     }
 
     public Salary(int id, User user, double baseSalary, double overtimeHours, double holidayWorkHours, double nightShiftHours, double sickLeaveHours, double overtimePayRate, double holidayPayRate, double nightShiftPayRate, String sickLeaveType, double totalSalary) {
@@ -162,5 +183,13 @@ public class Salary {
 
     public void setTotalSalary(double totalSalary) {
         this.totalSalary = totalSalary;
+    }
+
+    public LocalDate getSalaryMonth() {
+        return salaryMonth;
+    }
+
+    public void setSalaryMonth(LocalDate salaryMonth) {
+        this.salaryMonth = salaryMonth;
     }
 }

@@ -54,4 +54,15 @@ public class MessageService {
         return messageRepository.findByReceiverId(userId);
     }
 
+    public List<Message> getUnreadMessages(Integer userId) {
+        return messageRepository.findByReceiverIdAndReadStatusFalse(userId);
+    }
+
+    public void markMessagesAsRead(Integer senderId, Integer receiverId) {
+        List<Message> unreadMessages = messageRepository.findBySenderIdAndReceiverIdAndReadStatusFalse(senderId, receiverId);
+        for (Message message : unreadMessages) {
+            message.setReadStatus(true);
+        }
+        messageRepository.saveAll(unreadMessages);
+    }
 }

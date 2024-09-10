@@ -1,6 +1,10 @@
 package com.example.demo.DTO;
-public class SalaryDTO {
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+
+public class SalaryDTO {
+    private LocalDate salaryMonth;
     private double baseSalary;
     private double overtimeHours;
     private double holidayWorkHours;
@@ -15,7 +19,8 @@ public class SalaryDTO {
 
     }
 
-    public SalaryDTO(double baseSalary, double overtimeHours, double holidayWorkHours, double nightShiftHours, double sickLeaveHours, double overtimePayRate, double holidayPayRate, double nightShiftPayRate, String sickLeaveType, double totalSalary) {
+    public SalaryDTO(LocalDate salaryMonth, double baseSalary, double overtimeHours, double holidayWorkHours, double nightShiftHours, double sickLeaveHours, double overtimePayRate, double holidayPayRate, double nightShiftPayRate, String sickLeaveType, double totalSalary) {
+        this.salaryMonth = salaryMonth;
         this.baseSalary = baseSalary;
         this.overtimeHours = overtimeHours;
         this.holidayWorkHours = holidayWorkHours;
@@ -106,5 +111,13 @@ public class SalaryDTO {
 
     public void setTotalSalary(double totalSalary) {
         this.totalSalary = totalSalary;
+    }
+
+    public LocalDate getSalaryMonth() {
+        return salaryMonth;
+    }
+
+    public void setSalaryMonth(LocalDate salaryMonth) {
+        this.salaryMonth = salaryMonth;
     }
 }

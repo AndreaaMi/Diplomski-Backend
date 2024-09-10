@@ -1,5 +1,7 @@
 package com.example.demo.DTO;
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ShiftDTO {
     private Integer id;
@@ -9,6 +11,8 @@ public class ShiftDTO {
     private LocalDateTime endTime;
     private String location;
     private Integer extraHours;
+    private List<DayOfWeek> daysOfWeek;  // Add this field
+
 
     public ShiftDTO() {
     }
@@ -23,8 +27,20 @@ public class ShiftDTO {
         this.extraHours = extraHours;
     }
 
+
     public Integer getId() {
         return id;
+    }
+
+    public ShiftDTO(Integer id, Integer userId, Integer busId, LocalDateTime startTime, LocalDateTime endTime, String location, Integer extraHours, List<DayOfWeek> daysOfWeek) {
+        this.id = id;
+        this.userId = userId;
+        this.busId = busId;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.location = location;
+        this.extraHours = extraHours;
+        this.daysOfWeek = daysOfWeek;
     }
 
     public void setId(Integer id) {
@@ -77,5 +93,13 @@ public class ShiftDTO {
 
     public void setExtraHours(Integer extraHours) {
         this.extraHours = extraHours;
+    }
+
+    public List<DayOfWeek> getDaysOfWeek() {
+        return daysOfWeek;
+    }
+
+    public void setDaysOfWeek(List<DayOfWeek> daysOfWeek) {
+        this.daysOfWeek = daysOfWeek;
     }
 }

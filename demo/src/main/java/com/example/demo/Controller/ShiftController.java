@@ -4,11 +4,9 @@ import com.example.demo.DTO.ShiftDTO;
 import com.example.demo.Model.Bus;
 import com.example.demo.Model.Route;
 import com.example.demo.Model.Shift;
+import com.example.demo.Model.Salary;
 import com.example.demo.Model.User;
-import com.example.demo.Service.BusService;
-import com.example.demo.Service.RouteService;
-import com.example.demo.Service.ShiftService;
-import com.example.demo.Service.UserService;
+import com.example.demo.Service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +37,9 @@ public class ShiftController {
     @Autowired
     private BusService busService;
 
+    @Autowired
+    private SalaryService salaryService;
+
     @GetMapping("/all")
     public ResponseEntity<List<ShiftDTO>> getAllShifts() {
         List<Shift> shifts = shiftService.getAllShifts();
@@ -60,41 +61,6 @@ public class ShiftController {
         }
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
-
- /*   @PostMapping("/add")
-    public ResponseEntity<?> addShift(@RequestBody ShiftDTO shiftDTO) {
-        User user = userService.findById(shiftDTO.getUserId());
-        if (user == null) {
-            return new ResponseEntity<>("User not found", HttpStatus.BAD_REQUEST);
-        }
-
-        System.out.println("ShiftDTO Route ID: " + shiftDTO.getRouteId());
-
-        Shift shift = new Shift();
-        shift.setUser(user);
-        shift.setStartTime(shiftDTO.getStartTime());
-        shift.setEndTime(shiftDTO.getEndTime());
-        shift.setLocation(shiftDTO.getLocation());
-
-        if ("ROLE_DRIVER".equals(user.getRoles())) {
-            Route route = routeService.getById(shiftDTO.getRouteId());
-            System.out.println("Found Route: " + (route != null ? route.getId() : "null"));
-            if (route == null) {
-                return new ResponseEntity<>("Route not found", HttpStatus.BAD_REQUEST);
-            }
-            shift.setRoute(route);
-        } else {
-            shift.setRoute(null);
-        }
-
-        try {
-            shiftService.save(shift);
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-    }*/
-
     @PostMapping("/add")
     public ResponseEntity<?> addShift(@RequestBody ShiftDTO shiftDTO) {
         User user = userService.findById(shiftDTO.getUserId());
@@ -102,12 +68,15 @@ public class ShiftController {
             return new ResponseEntity<>("User not found", HttpStatus.BAD_REQUEST);
         }
 
+        List<DayOfWeek> daysOfWeek = shiftDTO.getDaysOfWeek();  // Preuzimamo dane iz DTO-a
         LocalDate startDate = shiftDTO.getStartTime().toLocalDate();
-        LocalDate endDate = startDate.with(TemporalAdjusters.next(DayOfWeek.FRIDAY));
+        LocalDate endDate = startDate.with(TemporalAdjusters.lastDayOfMonth());
 
         List<Shift> shiftsToAdd = new ArrayList<>();
+        int totalDays = 0;  // Ovo će nam pomoći da izračunamo ukupan broj dana
+
         while (startDate.isBefore(endDate) || startDate.equals(endDate)) {
-            if (!(startDate.getDayOfWeek().equals(DayOfWeek.SATURDAY) || startDate.getDayOfWeek().equals(DayOfWeek.SUNDAY))) {
+            if (daysOfWeek.contains(startDate.getDayOfWeek())) {
                 LocalDateTime startTime = LocalDateTime.of(startDate, shiftDTO.getStartTime().toLocalTime());
                 LocalDateTime endTime = startTime.plusHours(8);
                 if (shiftDTO.getExtraHours() != null && shiftDTO.getExtraHours() > 0) {
@@ -119,7 +88,7 @@ public class ShiftController {
                 shift.setStartTime(startTime);
                 shift.setEndTime(endTime);
                 shift.setLocation(shiftDTO.getLocation());
-                shift.setExtraHours(shiftDTO.getExtraHours()); // Make sure this is being set
+                shift.setExtraHours(shiftDTO.getExtraHours());
 
                 if ("ROLE_DRIVER".equals(user.getRoles())) {
                     Bus bus = busService.findById(shiftDTO.getBusId());
@@ -130,17 +99,56 @@ public class ShiftController {
                 }
 
                 shiftsToAdd.add(shift);
+                totalDays++;  // Povećavamo broj dana kada se smena dodaje
             }
             startDate = startDate.plusDays(1);
         }
 
         try {
             shiftService.saveAll(shiftsToAdd);
+
+            // Ažuriramo platu samo ako već postoji za taj mesec
+            updateSalaryForUserAndMonth(user.getId(), shiftDTO.getStartTime().getYear(), shiftDTO.getStartTime().getMonthValue(), totalDays, shiftDTO.getExtraHours());
+
             return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
+
+    private void updateSalaryForUserAndMonth(int userId, int year, int month, int totalDays, Integer extraHoursPerDay) {
+        User user = userService.findById(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        LocalDate salaryDate = LocalDate.of(year, month, 1);
+
+        // Pronađi postojeću platu za taj mesec
+        Salary salary = salaryService.getByUserAndMonth(user, salaryDate);
+        if (salary == null) {
+            // Ako ne postoji plata za taj mesec, preskačemo ažuriranje
+            return;
+        }
+
+        // Računamo ukupne ekstra sate
+        double totalExtraHours = totalDays * (extraHoursPerDay != null ? extraHoursPerDay : 0);
+
+        // Ažuriramo overtimeHours
+        salary.setOvertimeHours(salary.getOvertimeHours() + totalExtraHours);
+
+        // Ponovo preračunavamo ukupnu platu
+        double totalSalary = salary.getBaseSalary() +
+                (salary.getOvertimeHours() * salary.getOvertimePayRate()) +
+                (salary.getHolidayWorkHours() * salary.getHolidayPayRate()) +
+                (salary.getNightShiftHours() * salary.getNightShiftPayRate());
+
+        salary.setTotalSalary(totalSalary);
+
+        // Čuvamo ažuriranu platu
+        salaryService.save(salary);
+    }
+
     @GetMapping("/date/{date}")
     public ResponseEntity<List<ShiftDTO>> getShiftsByDate(@PathVariable("date") String dateString) {
         LocalDate date;

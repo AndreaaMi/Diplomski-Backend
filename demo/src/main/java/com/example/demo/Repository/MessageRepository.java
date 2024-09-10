@@ -16,5 +16,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     Page<Message> findBySenderIdAndContentContaining(Integer senderId, String content, Pageable pageable);
     Page<Message> findByReceiverIdAndContentContaining(Integer receiverId, String content, Pageable pageable);
     List<Message> findBySenderIdAndReceiverId(Integer senderId, Integer receiverId);
-
+    List<Message> findByReceiverIdAndReadStatusFalse(Integer receiverId);
+    List<Message> findBySenderIdAndReceiverIdAndReadStatusFalse(Integer senderId, Integer receiverId);
 }

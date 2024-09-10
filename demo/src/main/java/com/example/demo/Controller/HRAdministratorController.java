@@ -9,6 +9,7 @@ import com.example.demo.Service.*;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/CityFlow")
@@ -50,6 +52,9 @@ public class HRAdministratorController {
 
     @Autowired
     private LocationService locationService;
+    @Autowired
+    private ShiftService shiftService;
+
     @PostMapping (path = "/addUser")
     public ResponseEntity<User> addUser(@RequestBody UserDTO userDTO) {
         User existingUser = this.userService.findByEmail(userDTO.getEmail());
@@ -84,7 +89,6 @@ public class HRAdministratorController {
             sendRegistrationEmail(newUser.getEmail(), newUser.getPassword(), newUser.getUsername());
 
             return new ResponseEntity<>(HttpStatus.OK);
-
     }
 }
 
@@ -264,35 +268,193 @@ public class HRAdministratorController {
         return new ResponseEntity<>(usersByRole, HttpStatus.OK);
     }
 
-    @PostMapping("/assignSalary/{userId}")
-    public ResponseEntity<User> assignSalary(@PathVariable Integer userId, @RequestBody SalaryDTO salaryDTO) {
+    @PostMapping(value = "/assignSalary/{userId}", consumes = "application/json")
+    public ResponseEntity<?> assignSalary(@PathVariable Integer userId, @RequestBody SalaryDTO salaryDTO) {
         User user = userService.findById(userId);
 
+        if (user == null) {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+
+        if (!user.isEmployed()) {
+            return new ResponseEntity<>("User is not employed", HttpStatus.BAD_REQUEST);
+        }
+        LocalDate salaryDate = LocalDate.now();
+
+        try {
+            if (salaryService.isSalaryAssigned(user, salaryDate)) {
+                return new ResponseEntity<>("Salary already assigned for this month", HttpStatus.BAD_REQUEST);
+            }
+
+            List<Shift> shifts = shiftService.findAllByUserAndMonth(user, salaryDate);
+            double totalExtraHours = shifts.stream().mapToInt(Shift::getExtraHours).sum();
+
+            Salary newSalary = new Salary();
+            newSalary.setUser(user);
+            newSalary.setSalaryMonth(salaryDate);
+            newSalary.setBaseSalary(salaryDTO.getBaseSalary());
+            newSalary.setOvertimePayRate(salaryDTO.getOvertimePayRate());
+            newSalary.setHolidayPayRate(salaryDTO.getHolidayPayRate());
+            newSalary.setNightShiftPayRate(salaryDTO.getNightShiftPayRate());
+            newSalary.setOvertimeHours(totalExtraHours);
+            newSalary.setHolidayWorkHours(0);
+            newSalary.setNightShiftHours(0);
+            newSalary.setSickLeaveHours(0);
+            newSalary.setSickLeaveType("None");
+
+            double totalSalary = salaryDTO.getBaseSalary() +
+                    (totalExtraHours * salaryDTO.getOvertimePayRate()) +
+                    (newSalary.getHolidayWorkHours() * salaryDTO.getHolidayPayRate()) +
+                    (newSalary.getNightShiftHours() * salaryDTO.getNightShiftPayRate());
+
+            newSalary.setTotalSalary(totalSalary);
+
+            salaryService.save(newSalary);
+
+            return new ResponseEntity<>(newSalary, HttpStatus.OK);
+        } catch (DataIntegrityViolationException e) {
+            return new ResponseEntity<>("This user already has a salary assigned for this month.", HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred while processing your request.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+
+    @GetMapping("/getSalaryByUserId/{userId}")
+    public ResponseEntity<SalaryDTO> getSalaryByUserId(@PathVariable int userId) {
+        User user = userService.findById(userId);
         if (user == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        if (!user.isEmployed()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        Salary salary = salaryService.getByUser(user);
+        if (salary == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        Salary salary = new Salary();
-        salary.setUser(user);
-        salary.setBaseSalary(salaryDTO.getBaseSalary());
-        salary.setOvertimeHours(salaryDTO.getOvertimeHours());
-        salary.setHolidayWorkHours(salaryDTO.getHolidayWorkHours());
-        salary.setNightShiftHours(salaryDTO.getNightShiftHours());
-        salary.setSickLeaveHours(salaryDTO.getSickLeaveHours());
-        salary.setSickLeaveType(salaryDTO.getSickLeaveType());
-        salary.setOvertimePayRate(salaryDTO.getOvertimePayRate());
-        salary.setHolidayPayRate(salaryDTO.getHolidayPayRate());
-        salary.setNightShiftPayRate(salaryDTO.getNightShiftPayRate());
-        salary.setTotalSalary(salaryDTO.getBaseSalary());
+        SalaryDTO salaryDTO = new SalaryDTO(
+                salary.getSalaryMonth(),
+                salary.getBaseSalary(),
+                salary.getOvertimeHours(),
+                salary.getHolidayWorkHours(),
+                salary.getNightShiftHours(),
+                salary.getSickLeaveHours(),
+                salary.getOvertimePayRate(),
+                salary.getHolidayPayRate(),
+                salary.getNightShiftPayRate(),
+                salary.getSickLeaveType(),
+                salary.getTotalSalary()
+        );
 
-        salaryService.save(salary);
-
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(salaryDTO, HttpStatus.OK);
     }
+
+    @GetMapping("/getLatestSalaryByUserId/{userId}")
+    public ResponseEntity<SalaryDTO> getLatestSalaryByUserId(@PathVariable Integer userId) {
+        User user = userService.findById(userId);
+        if (user == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        Salary salary = salaryService.getByUser(user);
+        if (salary == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        SalaryDTO salaryDTO = new SalaryDTO(
+                salary.getSalaryMonth(),
+                salary.getBaseSalary(),
+                salary.getOvertimeHours(),
+                salary.getHolidayWorkHours(),
+                salary.getNightShiftHours(),
+                salary.getSickLeaveHours(),
+                salary.getOvertimePayRate(),
+                salary.getHolidayPayRate(),
+                salary.getNightShiftPayRate(),
+                salary.getSickLeaveType(),
+                salary.getTotalSalary()
+        );
+
+        return new ResponseEntity<>(salaryDTO, HttpStatus.OK);
+    }
+
+    @GetMapping("/getSalaryByUserIdAndMonth/{userId}/{year}/{month}")
+    public ResponseEntity<?> getSalaryByUserIdAndMonth(@PathVariable Integer userId, @PathVariable int year, @PathVariable int month) {
+        User user = userService.findById(userId);
+        if (user == null) {
+            return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+        }
+
+        // Define the start and end of the month
+        LocalDate monthStart = LocalDate.of(year, month, 1);
+        LocalDate monthEnd = monthStart.withDayOfMonth(monthStart.lengthOfMonth());
+
+        // Fetch salary within the range of the month
+        List<Salary> salaries = salaryService.getByUserAndMonthRange(user, monthStart, monthEnd);
+        if (salaries.isEmpty()) {
+            return new ResponseEntity<>("No salary record found for specified month", HttpStatus.NOT_FOUND);
+        }
+
+        // Since we're expecting one salary per month, we'll take the first one
+        Salary salary = salaries.get(0);
+
+        SalaryDTO salaryDTO = new SalaryDTO(
+                salary.getSalaryMonth(),
+                salary.getBaseSalary(),
+                salary.getOvertimeHours(),
+                salary.getHolidayWorkHours(),
+                salary.getNightShiftHours(),
+                salary.getSickLeaveHours(),
+                salary.getOvertimePayRate(),
+                salary.getHolidayPayRate(),
+                salary.getNightShiftPayRate(),
+                salary.getSickLeaveType(),
+                salary.getTotalSalary()
+        );
+
+        return new ResponseEntity<>(salaryDTO, HttpStatus.OK);
+    }
+
+    @GetMapping("/getAllSalariesForUser/{userId}")
+    public ResponseEntity<List<SalaryDTO>> getAllSalariesForUser(@PathVariable Integer userId) {
+        User user = userService.findById(userId);
+        if (user == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        List<Salary> salaries = salaryService.findAllByUser(user);
+        if (salaries.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+
+        List<SalaryDTO> salaryDTOs = salaries.stream().map(salary -> new SalaryDTO(
+                salary.getSalaryMonth(),
+                salary.getBaseSalary(),
+                salary.getOvertimeHours(),
+                salary.getHolidayWorkHours(),
+                salary.getNightShiftHours(),
+                salary.getSickLeaveHours(),
+                salary.getOvertimePayRate(),
+                salary.getHolidayPayRate(),
+                salary.getNightShiftPayRate(),
+                salary.getSickLeaveType(),
+                salary.getTotalSalary()
+        )).collect(Collectors.toList());
+
+        return new ResponseEntity<>(salaryDTOs, HttpStatus.OK);
+    }
+    @GetMapping("/generateSalaryReport/{userId}")
+    public ResponseEntity<List<SalaryDTO>> generateSalaryReport(@PathVariable Integer userId) {
+        List<SalaryDTO> salaryReport = salaryService.generateSalaryReport(userId);
+        if (salaryReport.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(salaryReport, HttpStatus.OK);
+    }
+
+
+
     @GetMapping("/searchByName")
     public ResponseEntity<List<User>> searchByName(@RequestParam String name) {
         List<User> users = userService.searchByName(name);
@@ -323,33 +485,6 @@ public class HRAdministratorController {
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
 
-    @GetMapping("/getSalaryByUserId/{userId}")
-    public ResponseEntity<SalaryDTO> getSalaryByUserId(@PathVariable int userId) {
-        User user = userService.findById(userId);
-        if (user == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        Salary salary = salaryService.getByUser(user);
-        if (salary == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        SalaryDTO salaryDTO = new SalaryDTO(
-                salary.getBaseSalary(),
-                salary.getOvertimeHours(),
-                salary.getHolidayWorkHours(),
-                salary.getNightShiftHours(),
-                salary.getSickLeaveHours(),
-                salary.getOvertimePayRate(),
-                salary.getHolidayPayRate(),
-                salary.getNightShiftPayRate(),
-                salary.getSickLeaveType(),
-                salary.getTotalSalary()
-        );
-
-        return new ResponseEntity<>(salaryDTO, HttpStatus.OK);
-    }
 
     @GetMapping("/getUserProfilePicture/{userId}")
     public ResponseEntity<?> getUserProfilePicture(@PathVariable Integer userId) {
@@ -486,6 +621,22 @@ public class HRAdministratorController {
         return new ResponseEntity<>(locations, HttpStatus.OK);
     }
 
+    @GetMapping("/unreadMessages/{userId}")
+    public ResponseEntity<List<Message>> getUnreadMessages(@PathVariable Integer userId) {
+        List<Message> unreadMessages = messageService.getUnreadMessages(userId);
+        if (unreadMessages.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(unreadMessages, HttpStatus.OK);
+    }
+    @PutMapping("/markAsRead/{senderId}/{receiverId}")
+    public ResponseEntity<Void> markMessagesAsRead(
+            @PathVariable Integer senderId,
+            @PathVariable Integer receiverId) {
+
+        messageService.markMessagesAsRead(senderId, receiverId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 
 
 }

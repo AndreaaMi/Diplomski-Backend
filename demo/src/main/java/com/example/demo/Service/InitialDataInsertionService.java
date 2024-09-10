@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,7 +105,7 @@ public class InitialDataInsertionService {
         user6.setProfilePicture("profile_20230915_102115.png");
         userService.save(user6);
         User savedUser6 = userService.addUser(user6);
-        if(savedUser6 != null) {
+      /*  if(savedUser6 != null) {
             Salary salaryForUser6 = new Salary();
             salaryForUser6.setUser(savedUser6);
             salaryForUser6.setBaseSalary(50000);  // Example base salary
@@ -122,7 +123,7 @@ public class InitialDataInsertionService {
                     (salaryForUser6.getNightShiftHours() * salaryForUser6.getNightShiftPayRate()));
             salaryService.save(salaryForUser6);
 
-        }
+        }*/
 
         LocalDate user7BirthDate = LocalDate.of(1978, 8, 30);
         User user7 = new User(
@@ -223,6 +224,31 @@ public class InitialDataInsertionService {
         );
         emp5.setProfilePicture("profile_20230915_102105.png");
         userService.save(emp5);
+        User savedEmp5 = userService.addUser(emp5);
+/*
+        if(savedEmp5 != null) {
+
+            Salary salaryForEmp5 = new Salary();
+            YearMonth currentMonth = YearMonth.now();
+            salaryForEmp5.setSalaryMonth(currentMonth);
+            salaryForEmp5.setUser(savedEmp5);
+            salaryForEmp5.setBaseSalary(5000);
+            salaryForEmp5.setOvertimeHours(10);
+            salaryForEmp5.setHolidayWorkHours(5);
+            salaryForEmp5.setNightShiftHours(8);
+            salaryForEmp5.setSickLeaveHours(0);
+            salaryForEmp5.setOvertimePayRate(150);
+            salaryForEmp5.setHolidayPayRate(200);
+            salaryForEmp5.setNightShiftPayRate(180);
+            salaryForEmp5.setSickLeaveType("None");
+            salaryForEmp5.setTotalSalary(salaryForEmp5.getBaseSalary() +
+                    (salaryForEmp5.getOvertimeHours() * salaryForEmp5.getOvertimePayRate()) +
+                    (salaryForEmp5.getHolidayWorkHours() * salaryForEmp5.getHolidayPayRate()) +
+                    (salaryForEmp5.getNightShiftHours() * salaryForEmp5.getNightShiftPayRate()));
+            salaryService.save(salaryForEmp5);
+
+        }
+*/
 
         Card card1 = new Card(
                 "1234 5678",
@@ -332,14 +358,23 @@ public class InitialDataInsertionService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        Message message1 = new Message(2, 1, "Hi Andrea, I would like to request information regarding my upcoming performance review. Could you kindly provide the date and any necessary documents?", now.minusDays(1), false);
+        Message message1 = new Message(2, 1, "Hi Andrea, I would like to request information regarding my upcoming performance review. Could you kindly provide the date and any necessary documents?", now.minusDays(1), true);
         Message message2 = new Message(1, 2, "Dear Ana, your performance review is scheduled for 26-09-2024. Please find the relevant documents attached for your reference. Let us know if you have any further questions.", now.minusDays(1).plusMinutes(5), true);
-        Message message5 = new Message(2, 1, "Could you also confirm whether there are any changes to the company's policy on paid leave this year", now.minusDays(1).plusMinutes(10), false);
+        Message message5 = new Message(2, 1, "Could you also confirm whether there are any changes to the company's policy on paid leave this year", now.minusDays(1).plusMinutes(10), true);
         Message message6 = new Message(1, 2, "We appreciate your inquiry. There have been no changes to the paid leave policy.", now.minusDays(1).plusMinutes(15), true);
-        Message message7 = new Message(2, 1, "Thank you for the information", now.minusDays(1).plusMinutes(9), false);
+        Message message7 = new Message(2, 1, "Thank you for the information", now.minusDays(1).plusMinutes(9), true);
         Message message8 = new Message(1, 2, "Should there be any updates, all employees will be notified promptly.", now.minusDays(1).plusMinutes(16), true);
-        Message message3 = new Message(2, 3, "Are we meeting tomorrow?", now.minusHours(10), false);
+        Message message3 = new Message(2, 3, "Are we meeting tomorrow?", now.minusHours(10), true);
         Message message4 = new Message(3, 2, "Yes, at the usual place.", now.minusHours(9), true);
+        Message message3_1 = new Message(1, 3, "Could you please update me on the status of the project report?", now.minusDays(2), true);
+        Message message3_2 = new Message(3, 1, "I am finalizing the last section and will have it ready by tomorrow morning.", now.minusDays(1).plusMinutes(10), true);
+        Message message3_3 = new Message(1, 3, "Perfect, I look forward to reviewing it.", now.minusDays(1).plusMinutes(15), true);
+        Message message4_1 = new Message(1, 4, "Reminder: Health insurance enrollment period ends next Friday. Please ensure your selections are made by then.", now.minusDays(3), true);
+        Message message4_2 = new Message(4, 1, "I have some questions about the different plans. Can we schedule a time to discuss?", now.minusDays(2).plusMinutes(45), false);
+        Message message5_1 = new Message(1, 5, "Please provide the documentation needed for your work visa renewal as soon as possible.", now.minusDays(5), true);
+        Message message5_2 = new Message(5, 1, "I've gathered most of the documents. I'll drop them off at your office tomorrow.", now.minusDays(4).plusMinutes(30), true);
+        Message message5_3 = new Message(1, 5, "That works. Let me know if you need help with anything.", now.minusDays(4).plusMinutes(45), true);
+        Message message5_4 = new Message(5, 1, "Ok. Thank you.", now.minusDays(4).plusMinutes(45), false);
 
         messageService.save(message1);
         messageService.save(message2);
@@ -348,6 +383,17 @@ public class InitialDataInsertionService {
         messageService.save(message5);
         messageService.save(message6);
         messageService.save(message7);
+        messageService.save(message8);
+
+        messageService.save(message3_1);
+        messageService.save(message3_2);
+        messageService.save(message3_3);
+        messageService.save(message4_1);
+        messageService.save(message4_2);
+        messageService.save(message5_1);
+        messageService.save(message5_2);
+        messageService.save(message5_3);
+        messageService.save(message5_4);
 
     }
 }
