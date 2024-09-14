@@ -56,11 +56,11 @@ public class HRAdministratorController {
     private ShiftService shiftService;
 
     @PostMapping (path = "/addUser")
-    public ResponseEntity<User> addUser(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<?> addUser(@RequestBody UserDTO userDTO) {
         User existingUser = this.userService.findByEmail(userDTO.getEmail());
 
-        if(existingUser != null){
-            return new ResponseEntity("User already exists", HttpStatus.FORBIDDEN);
+        if (existingUser != null) {
+            return new ResponseEntity<>("User already exists", HttpStatus.FORBIDDEN);
         } else {
             User newUser = new User(
                     userDTO.getUsername(),
@@ -76,11 +76,16 @@ public class HRAdministratorController {
             this.userService.addUser(newUser);
 
             String role = userDTO.getRoles();
+
+            if (role == null) {
+                return new ResponseEntity<>("Role must be provided", HttpStatus.BAD_REQUEST);
+            }
+
             if (role.equals("ROLE_DRIVER")) {
                 Driver newDriver = new Driver();
                 newDriver.setUser(newUser);
                 this.driverService.save(newDriver);
-            } else if(role.equals("ROLE_Accountant")){
+            } else if (role.equals("ROLE_Accountant")) {
                 Accountant newAccountant = new Accountant();
                 newAccountant.setUser(newUser);
                 this.accountantService.save(newAccountant);
@@ -88,9 +93,10 @@ public class HRAdministratorController {
 
             sendRegistrationEmail(newUser.getEmail(), newUser.getPassword(), newUser.getUsername());
 
-            return new ResponseEntity<>(HttpStatus.OK);
+            return new ResponseEntity<>(newUser, HttpStatus.OK);
+        }
     }
-}
+
 
     private void sendRegistrationEmail(String email, String password, String username) {
         MimeMessage message = emailSender.createMimeMessage();
